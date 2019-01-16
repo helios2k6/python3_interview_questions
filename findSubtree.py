@@ -28,13 +28,7 @@ def findSubtree(t1, t2):
     if cmp:
         return True
 
-    l = findSubtree(t1.l, t2)
-    if l:
-        return True
-    r = findSubtree(t1.r, t2)
-    if r:
-        return True
-    return False
+    return findSubtree(t1.l, t2) or findSubtree(t1.r, t2)
 
 def test1():
     a = Node("a")

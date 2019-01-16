@@ -36,11 +36,12 @@ def getSuccessor(tree):
                 # we are the left child. Return the parent
                 return tree.parent
             else:
-                # go to the grandparent. If it's None, it won't matter
-                grandParent = tree.parent.parent
-                if grandParent and grandParent.value > tree.value:
-                    return grandParent
-                return None
+                currentNode = tree
+                parentNode = tree.parent
+                while parentNode and not parentNode.l is currentNode:
+                    currentNode = parentNode
+                    parentNode = parentNode.parent
+                return parentNode
 
 def test():
     a = BSTNode(3)
