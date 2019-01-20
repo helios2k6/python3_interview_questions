@@ -7,40 +7,42 @@ class Node:
     def __repr__(self):
         return self.value
 
-def processSums(node, totalSums, sideSums):
-    if not sideSums:
-        return
-
-    for sideSum in sideSums:
-        head = sideSum[0]
-        newSum = node.value + head
-        newSums = [newSum] + sideSum
-        totalSums.append(newSums)
-
 def findNumSumPathsImpl(node):
     if not node:
-        return []
+        return None
 
     if not node.l and not node.r:
-        return [[node.value]]
+        return ([node.value], [])
 
     lSums = findNumSumPathsImpl(node.l)
     rSums = findNumSumPathsImpl(node.r)
 
-    totalSums = []
-    processSums(node, totalSums, lSums)
-    processSums(node, totalSums, rSums)
+    currentSums = [node.value]
+    otherSums = []
 
-    return totalSums
+    if lSums:
+        for i in lSums[0]:
+            currentSums.append(i + node.value)
+            otherSums.append(i)
+        otherSums = otherSums + lSums[1]
+
+    if rSums:
+        for i in rSums[0]:
+            currentSums.append(i + node.value)
+            otherSums.append(i)
+        otherSums = otherSums + rSums[1]
+
+    return (currentSums, otherSums)
 
 def findNumSumPaths(node, sum):
     allSums = findNumSumPathsImpl(node)
-    print(allSums)
     counter = 0
-    for sumArray in allSums:
-        for iSum in sumArray:
-            if iSum == sum:
-                counter += 1
+    for i in allSums[0]:
+        if i == sum:
+            counter += 1
+    for i in allSums[1]:
+        if i == sum:
+            counter += 1
 
     return counter
 
@@ -64,7 +66,7 @@ def test():
     c.r = g
 
     numPaths = findNumSumPaths(a, 3)
-    print(f"Num paths (EXPECTED: 2): {numPaths}")
+    print(f"Num paths: {numPaths}")
 
 def test2():
     a = Node(1)
@@ -86,6 +88,7 @@ def test2():
     c.r = g
 
     numPaths = findNumSumPaths(a, 2)
-    print(f"Num paths (EXPECTED: 2): {numPaths}")
+    print(f"Num paths: {numPaths}")
 
 test()
+test2()
