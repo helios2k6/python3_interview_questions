@@ -12,10 +12,8 @@ def processSums(node, totalSums, sideSums):
         return
 
     for sideSum in sideSums:
-        head = sideSum[0]
-        newSum = node.value + head
-        newSums = [newSum] + sideSum
-        totalSums.append(newSums)
+        child = sideSum[0]
+        
 
 def findNumSumPathsImpl(node):
     if not node:
