@@ -26,22 +26,19 @@ def hasNodeBeenAssignedToComponent(components, node):
 def assign(transposedAdjList, components, node, root):
     if hasNodeBeenAssignedToComponent(components, node):
         return
+
     if root not in components:
         components[root] = []
 
-    componentMembers = components[root]
-    componentMembers.append(node)
-
+    components[root].append(node)
     for inMember in transposedAdjList[node]:
         assign(transposedAdjList, components, inMember, root)
 
 def stronglyConnectedComponents(adjList):
     visitedNodes = {}
     l = []
-
     for node, _ in adjList.items():
         visit(adjList, visitedNodes, l, node)
-
     transposedAdjList = transposeAdjList(adjList)
     components = {}
     for u in reversed(l): #we have to reverse this because we were supposed to prepend stuff, but that's slow in python
