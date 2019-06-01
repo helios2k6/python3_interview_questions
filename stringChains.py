@@ -1,7 +1,10 @@
-def processWordImpl(dictionary, word, currentChainLength):
+def processWord(dictionary, word, currentChainLength, memoPad):
     wordLength = len(word)
     if wordLength == 1:
         return currentChainLength
+
+    if word in memoPad:
+        return memoPad[word]
 
     currentMaxChainLength = currentChainLength
     for i in range(0, wordLength):
@@ -9,23 +12,52 @@ def processWordImpl(dictionary, word, currentChainLength):
         t = word[i+1::]
         newString = h + t
         if newString in dictionary:
-            localChainLength = processWordImpl(dictionary, newString, currentChainLength + 1)
+            localChainLength = processWord(dictionary, newString, currentChainLength + 1, memoPad)
             if localChainLength > currentMaxChainLength:
                 currentMaxChainLength = localChainLength
+    
     return currentMaxChainLength
-
-def processWord(dictionary, word):
-    return processWordImpl(dictionary, word, 1)
 
 def longestChain(words):
     currentMax = 1
+    wordsAsDictionary = {}
     for word in words:
-        localMax = processWord(words, word)
+        wordsAsDictionary[word] = True
+    
+    memoPad = {}
+    for word in words:
+        localMax = 1
+        if word in memoPad:
+            localMax = memoPad[word]
+        else:
+            localMax = processWord(wordsAsDictionary, word, 1, memoPad)
         if localMax > currentMax:
             currentMax = localMax
     return currentMax
 
+def test0():
+    words = ["a", "b", "ba", "bca"]
+    print(longestChain(words))
+
 def test1():
     words = ["a", "b", "ba", "bca", "bda", "bdca"]
     print(longestChain(words))
+
+def test2():
+    words = [
+        "a",
+        "zxb",
+        "ba",
+        "bca",
+        "bda",
+        "bdca",
+        "zxbe",
+        "azxbe",
+        "azxpbe"
+    ]
+
+    print(longestChain(words))
+
+test0()
 test1()
+test2()
