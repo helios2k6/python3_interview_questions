@@ -67,4 +67,39 @@ def testCase0() -> None:
     rotateMat(testCase)
     print(testCase)
 
+def testCase1() -> None:
+    testCase = SquareMatrix(2)
+    testCase.setValue(0, 0, 1)
+    testCase.setValue(0, 1, 2)
+
+    testCase.setValue(1, 0, 4)
+    testCase.setValue(1, 1, 5)
+
+    print(testCase)
+    rotateMat(testCase)
+    print(testCase)
+
+def testCase2() -> None:
+    testCase = SquareMatrix(4)
+    testCase.setValue(0, 0, 1)
+    testCase.setValue(0, 1, 2)
+    testCase.setValue(0, 2, 3)
+    testCase.setValue(0, 3, 4)
+
+    testCase.setValue(1, 0, 5)
+    testCase.setValue(1, 1, 6)
+    testCase.setValue(1, 2, 7)
+    testCase.setValue(1, 3, 8)
+
+    testCase.setValue(2, 0, 9)
+    testCase.setValue(2, 1, 10)
+    testCase.setValue(2, 2, 11)
+    testCase.setValue(2, 3, 12)
+
+    print(testCase)
+    rotateMat(testCase)
+    print(testCase)
+
 testCase0()
+testCase1()
+testCase2()
