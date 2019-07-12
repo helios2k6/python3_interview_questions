@@ -160,4 +160,4 @@ def diet1():
 
     dietCore(foods, 160, 166, 101, {"Shake": 2})
 
-diet0()
+diet1()
