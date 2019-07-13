@@ -38,10 +38,74 @@ class SparseCache:
     def __str__(self):
         return self.cache.__str__()
 
-def tryGetFromCache(cache: dict, itemNumber: int, protein: int, carbs: int, fat: int):
-    if itemNumber not in cache or protein not in cache[itemNumber] or carbs not in cache[itemNumber][protein] or fat not in cache[itemNumber][protein][carbs]:
-        return (0, 0, 0)
-    return cache[itemNumber][protein][carbs][fat]
+class RecSparseCache:
+    def __init__(self, foods: list):
+        self.cache = {}
+        self.foods = foods
+
+    def tryGet(self, itemNumber: int, protein: int, carbs: int, fat: int):
+        if itemNumber not in self.cache or protein not in self.cache[itemNumber] or carbs not in self.cache[itemNumber][protein] or fat not in self.cache[itemNumber][protein][carbs]:
+            return (-1, -1, -1)
+        return self.cache[itemNumber][protein][carbs][fat]
+
+    def insert(self, itemNumber: int, protein: int, carbs: int, fat: int, valueProtein: int, valueCarbs: int, valueFat: int):
+        if itemNumber not in self.cache:
+            self.cache[itemNumber] = {}
+        if protein not in self.cache[itemNumber]:
+            self.cache[itemNumber][protein] = {}
+        if carbs not in self.cache[itemNumber][protein]:
+            self.cache[itemNumber][protein][carbs] = {}
+        if fat not in self.cache[itemNumber][protein][carbs]:
+            self.cache[itemNumber][protein][carbs][fat] = {}
+        self.cache[itemNumber][protein][carbs][fat] = (valueProtein, valueCarbs, valueFat)
+
+    def get(self, itemNumber: int, protein: int, carbs: int, fat: int):
+        if itemNumber < 0 or protein <= 0 or carbs <= 0 or fat <= 0:
+            return (0, 0, 0)
+
+        (previousProtein, previousCarbs, previousFat) = self.tryGet(itemNumber - 1, protein, carbs, fat)
+        if previousProtein == -1 or previousCarbs == -1 or previousFat == -1:
+            (nextProtein, nextCarbs, nextFat) = self.get(itemNumber - 1, protein, carbs, fat)
+            self.insert(itemNumber - 1, protein, carbs, fat, nextProtein, nextCarbs, nextFat)
+
+        currentFood = self.foods[itemNumber]
+        if currentFood.carbs > carbs or currentFood.fat > fat: # ignore protein because we don't mind if this value exceeds our limits
+            (nextProtein, nextCarbs, nextFat) = self.tryGet(itemNumber - 1, protein, carbs, fat)
+            self.insert(itemNumber, protein, carbs, fat, nextProtein, nextCarbs, nextFat)
+        else:
+            (vProtein, vCarbs, vFat) = self.tryGet(itemNumber - 1, protein - currentFood.protein, carbs - currentFood.carbs, fat - currentFood.fat)
+            if vProtein == -1 or vCarbs == -1 or vFat == -1:
+                (nextProtein, nextCarbs, nextFat) = self.get(itemNumber - 1, protein - currentFood.protein, carbs - currentFood.carbs, fat - currentFood.fat)
+                self.insert(itemNumber - 1, protein - currentFood.protein, carbs - currentFood.carbs, fat - currentFood.fat, nextProtein, nextCarbs, nextFat)
+            itemWithoutValue = self.tryGet(itemNumber - 1, protein - currentFood.protein, carbs - currentFood.carbs, fat - currentFood.fat)
+            itemWithoutValueButCurrentValue = (itemWithoutValue[0] + currentFood.protein, itemWithoutValue[1] + currentFood.carbs, itemWithoutValue[2] + currentFood.fat)
+            if previousProtein < itemWithoutValueButCurrentValue[0] or previousCarbs < itemWithoutValueButCurrentValue[1] or previousFat < itemWithoutValueButCurrentValue[2]:
+                self.insert(itemNumber, protein, carbs, fat, itemWithoutValueButCurrentValue[0], itemWithoutValueButCurrentValue[1], itemWithoutValueButCurrentValue[2])
+            else:
+                self.insert(itemNumber, protein, carbs, fat, previousProtein, previousCarbs, previousFat)
+
+        return self.tryGet(itemNumber, protein, carbs, fat)
+
+    def getOptimalFoods(self, protein: int, carbs: int, fat: int) -> list:
+        listOfItems = []
+        currentProteinLimit = protein
+        currentCarbsLimit = carbs
+        currentFatLimit = fat
+        for itemNumber in reversed(range(0, len(self.foods))):
+            currentValue = self.get(itemNumber, currentProteinLimit, currentCarbsLimit, currentFatLimit)
+            previousValue = self.get(itemNumber - 1, currentProteinLimit, currentCarbsLimit, currentFatLimit)
+
+            if currentValue[0] != previousValue[0] or currentValue[1] != previousValue[1] or currentValue[2] != previousValue[2]:
+                currentFood = self.foods[itemNumber]
+                listOfItems.append(currentFood)
+
+                # Update the current protein, carbs, and fat limits
+                currentProteinLimit -= currentFood.protein
+                currentCarbsLimit -= currentFood.carbs
+                currentFatLimit -= currentFood.fat
+
+        return listOfItems
+
 
 def solveKnapsack3D(foods: list, protein: int, carbs: int, fat: int, categoryLimits: dict) -> list:
     # Initialize the cache first
@@ -104,6 +168,17 @@ def dietCore(foods: list, proteinLimit: int, carbLimit: int, fatLimit: int, cate
         runningFat += food.fat
         print(f"{food} | Total Protein: {runningProtein} | Total Carbs: {runningCarbs} | Total Fat: {runningFat}")
 
+def dietCoreWithRec(foods: list, proteinLimit: int, carbLimit: int, fatLimit: int):
+    print(f"[REC] Testing with: ({proteinLimit}, {carbLimit}, {fatLimit})")
+    optimalFoods = RecSparseCache(foods).getOptimalFoods(proteinLimit, carbLimit, fatLimit)
+    runningProtein = 0
+    runningCarbs = 0
+    runningFat = 0
+    for food in optimalFoods:
+        runningProtein += food.protein
+        runningCarbs += food.carbs
+        runningFat += food.fat
+        print(f"{food} | Total Protein: {runningProtein} | Total Carbs: {runningCarbs} | Total Fat: {runningFat}")
 
 def diet0():
     foods = []
@@ -158,6 +233,54 @@ def diet1():
     for _ in range(0, 4):
         foods.append(Food("Lactaid Milk (1 cup)", 8, 13, 5))
 
+    foods.append(Food("Cooked Ground Beef (6 oz)", 44, 0, 26))
+    foods.append(Food("Dave's Killer Bagels (1 bagel)", 12, 48, 2.5))
+    foods.append(Food("Pizza Slice (FB Pizza)", 4.3, 12, 4.7))
+
     dietCore(foods, 160, 166, 101, {"Shake": 2})
+
+def diet1Rec():
+    foods = []
+    # Scrambled Eggs
+    for _ in range(0, 3):
+        foods.append(Food("Scrambled Eggs (100g)", 11, 2, 12))
+
+    # Muscle Milk
+    for _ in range(0, 2):
+        shake = Food("Muscle Milk (14 oz)", 25, 9, 5)
+        shake.setCategory("Shake")
+        foods.append(shake)
+
+    # Bacon
+    for _ in range(0, 4):
+        foods.append(Food("Bacon (1 Slice)", 3, 0, 3))
+
+    # Orange Juice
+    for _ in range(0, 2):
+        foods.append(Food("Orange Juice (1/2 cup)", 1, 13, 0))
+
+    # Premier Protein Shake
+    for _ in range(0, 2):
+        shake = Food("Premier Protein Shake (325 ml)", 30, 5, 3)
+        shake.setCategory("Shake")
+        foods.append(shake)
+
+    # Hanger Steak
+    for _ in range(0, 2):
+        foods.append(Food("Hanger Steak (5 oz)", 30, 0, 10))
+
+    # Crispy Chicken Strips
+    for _ in range(0, 4):
+        foods.append(Food("Crispy Chicken Strips (100 g)", 14, 22, 7.2))
+
+    # Lactaid Milk
+    for _ in range(0, 4):
+        foods.append(Food("Lactaid Milk (1 cup)", 8, 13, 5))
+
+    foods.append(Food("Cooked Ground Beef (6 oz)", 44, 0, 26))
+    foods.append(Food("Dave's Killer Bagels (1 bagel)", 12, 48, 2.5))
+    foods.append(Food("Pizza Slice (FB Pizza)", 4.3, 12, 4.7))
+
+    dietCoreWithRec(foods, 160, 166, 101)
 
 diet1()
