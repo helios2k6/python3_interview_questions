@@ -1,5 +1,5 @@
 def findOptimalSplits(dims: list) -> list:
-    n = len(dims) - 1 
+    n = len(dims) 
     costs = [[0 for _ in dims] for _ in dims]
     splits = [[0 for _ in dims] for _ in dims]
     for subSequenceLength in range(1, n):
@@ -11,12 +11,12 @@ def findOptimalSplits(dims: list) -> list:
                 if not costs[startOfRangeIndex][endOfRangeIndex] or localCost < costs[startOfRangeIndex][endOfRangeIndex]:
                     costs[startOfRangeIndex][endOfRangeIndex] = localCost
                     splits[startOfRangeIndex][endOfRangeIndex] = splitIndex
-    return splits[0]
+    return splits[1]
 
 def testCore(dims: list) -> None:
     print(f"Optimal Splits Matrix: {findOptimalSplits(dims)}")
 
 def test0() -> None:
-    testCore([10000, 100, 100, 1000])
+    testCore([100, 10, 10, 10000, 100])
 
 test0()
