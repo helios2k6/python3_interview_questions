@@ -1,28 +1,22 @@
-def isSentenceImpl(s: str, vocab: dict, cache: dict) -> bool:
-    if s in cache:
-        return cache[s]
+def isSentence(s: str, vocab: dict) -> bool:
     if not s:
-        return False
-    if s in vocab:
-        cache[s] = True
         return True
-    else:
-        cache[s] = False
 
-    # go through each 
-    for i in range(0, len(s) - 1):
-        for j in range(i + 1, len(s)):
-            head = s[i:j]
-            tail = s[j:]
-            cache[head] = isSentenceImpl(head, vocab, cache)
-            cache[tail] = isSentenceImpl(tail, vocab, cache)
-            if cache[head] and cache[tail]:
+    cache = [False for _ in range(0, len(s) + 1)]
+    for i in range(1, len(s) + 1):
+        if not cache[i] and s[0:i] in vocab:
+            cache[i] = True
+
+        if cache[i]:
+            if i == len(s):
                 return True
 
+            for j in range(i + 1, len(s) + 1):
+                if not cache[j] and s[i:j] in vocab:
+                    cache[j] = True
+                if j == len(s) and cache[j]:
+                    return True
     return False
-
-def isSentence(s: str, vocab: dict) -> bool:
-    return isSentenceImpl(s, vocab, {})
 
 def testCore(s: str, vocab: dict) -> None:
     print(f"{s} is a sentence: {isSentence(s, vocab)}")
