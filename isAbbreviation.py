@@ -1,42 +1,41 @@
-def compare(a: str, b: str, aIndex: int, bIndex: int):
-    if a[aIndex] == b[bIndex]:
-        return "C"
-    elif str.upper(a[aIndex]) == b[bIndex]:
-        return "L"
-    elif str.islower(a[aIndex]):
-        return "l"
-    return False
-
 def isAbbreviation(a: str, b: str) -> bool:
     if not a and not b:
         return True
-
     if not a or not b or len(a) < len(b):
         return False
 
-    cache = [[None for _ in range(0, len(a))] for _ in range(0, len(b))]
+    cache = [[False for _ in range(0, len(b))] for _ in range(0, len(a))]
+    lowerCaseLetters = [False for _ in range(0, len(a))]
     for bIndex in range(0, len(b)):
         for aIndex in range(bIndex, len(a)):
-            if not cache[bIndex][aIndex]:
-                cache[bIndex][aIndex] = compare(a, b, aIndex, bIndex)
+            if str.islower(a[aIndex]):
+                lowerCaseLetters[aIndex] = True
+            if str.upper(a[aIndex]) == b[bIndex]:
+                cache[aIndex][bIndex] = True
 
-    # Check cache
-    for i in range(0, len(b)):
-        isBConsumed = False
-        for j in range(0, len(a)):
-            if cache[i][j] == "C" or cache[i][j] == "L":
-                isBConsumed = True
+    # For every character in "b", find a match in "a"
+    for bIndex in range(0, len(b)):
+        didFindMatch = False
+        for aIndex in range(bIndex, len(a)):
+            if cache[aIndex][bIndex]:
+                didFindMatch = True
                 break
-        if not isBConsumed:
+        if not didFindMatch:
             return False
 
-    for i in range(0, len(a)):
-        isAConsumed = False
-        for j in range(0, len(b)):
-            if cache[j][i] == "C" or cache[j][i] == "L" or cache[j][i] == "l":
-                isAConsumed = True
-        if not isAConsumed:
-            return False
+    # check to make sure that any non-lowercase letters are also consumed by some 
+    # character in "b"
+    takenBChars = [False for _ in range(0, len(b))]
+    for lowerIndex in range(0, len(a)):
+        if not lowerCaseLetters[lowerIndex]:
+            foundBMatch = False
+            for bIndex in range(0, len(b)):
+                if cache[lowerIndex][bIndex] and not takenBChars[bIndex]:
+                    foundBMatch = True
+                    takenBChars[bIndex] = True
+                    break
+            if not foundBMatch:
+                return False
 
     return True
 
@@ -55,6 +54,38 @@ def test3() -> None:
     # No
     testCore("KXzQ", "K")
 
+def test4() -> None:
+    # No
+    testCore(
+        "RDWPJPAMKGRIWAPBZSYWALDBLDOFLWIQPMPLEMCJXKAENTLVYMSJNRJAQQPWAGVcGOHEWQYZDJRAXZOYDMNZJVUSJGKKKSYNCSFWKVNHOGVYULALKEBUNZHERDDOFCYWBUCJGbvqlddfazmmohcewjg", 
+        "RDPJPAMKGRIWAPBZSYWALDBLOFWIQPMPLEMCJXKAENTLVYMJNRJAQQPWAGVGOHEWQYZDJRAXZOYDMNZJVUSJGKKKSYNCSFWKVNHOGVYULALKEBUNZHERDOFCYWBUCJG"
+    )
+
+def test5() -> None:
+    # No
+    testCore(
+        "MBQEVZPBjcbswirgrmkkfvfvcpiukuxlnxkkenqp",
+        "MBQEVZP"
+    )
+
+def test6() -> None:
+    # Yes
+    testCore(
+        "hHhAhhcahhacaccacccahhchhcHcahaahhchhhchaachcaCchhchcaccccchhhcaahhhhcaacchccCaahhaahachhacaahhaachhhaaaCalhhchaccaAahHcchcazhachhhaaahaahhaacchAahccacahahhcHhccahaachAchahacaahcahacaahcahacaHhccccaahaahacaachcchhahhacchahhhaahcacacachhahchcaAhhcaahchHhhaacHcacahaccccaaahacCHhChchhhahhchcahaaCccccahhcaachhhacaaahcaaaccccaacaaHachaahcchaahhchhhcahahahhcaachhchacahhahahahAahaAcchahaahcaaaaahhChacahcacachacahcchHcaahchhcahaachnachhhhcachchahhhacHhCcaHhhhcaCccccaaahcahacahchahcaachcchaachahhhhhhhhcahhacacCcchahccaaaaaHhhccaAaaaCchahhccaahhacaccchhcahhcahaahhgacahcahhchcaaAccchahhhaahhccaaHcchaccacahHahChachhcaaacAhacacaacacchhchchacchchcacchachacaahachccchhhaccahcacchaccaahaaaccccccaaaaaaaHhcahcchmcHchcchaaahaccchaaachchHahcaccaaccahcacacahAhaacaacaccaccaaacahhhcacAhaCchcaacCcccachhchchcchhchahchchahchchhchcacaachahhccacachaAhaaachchhchchchhaachahaahahachhaaaccacahhcacchhhaaachaaacAahhcachchachhhcacchacaaChCahhhccahChaachhcahacchanaaacchhhccacacchcahccchAcahacaaachhacchachccaaHacaacAhahcCh",
+        "HAHHCHAACCCAHCHHAHHAHCACCHCCHHCAAHHCACCCAHHHACAAHHHHCHHCAHHAHHAAAHAACAAHAHHCAHAHACHACHCHACACHAAHHAAAHCAHHACACAACHHHCHAHCAHCHHHAHAHACCAAAHCHHCHHCCAACCCCAACHACAACAAHACHCHAHHACCHCAHHHAAACHACAACHCACACAHHCCHAHACCCACCAACHCHHHCCCCCHCCAHHCAAHHAHHHHHHHAACCCCAHCCAAAAAHHHAAAACCAHHCAHACACCHHCHAHAHHCHAACHHHHHCCHCCAHAHCHCAAACCACCCCHACCACHHACHHACACHACCAACCCCAAAAHHAHCHHHCCAHCCHACHHAHCCACACCHAHAAACACCCCAHCCAHACCCCCCHCCHHCHHHHCHCHCAHHHACHAHAACCCAAAACHAACAAAHHAAHAAAHACHHCACHCCHCHAACHACACHHCCCCCAHCACHAAAHCHCAHACAAC"
+    )
+
+def test7() -> None:
+    # No
+    testCore(
+        "XbxxobxBobbbxooXobXxxBOXoOboxxbobXOoBbxbXooXBboxooOxxXbboxoOxlobbObbXoXXbbXobbbXoxbxXBxoobooxbxoxoxOxxOxbxbxXobbbbBbxoxoooxooobXxbooBbOXxXxbxqobbbboXxoXXbbbxObXXxobOXXOxoOoxoXOXBxOxBoxbobxoBxbobobXooOxxOBXbxxXbooxbxooOxoxoobxxBOxxbbbxBxzXxbBxOobBObooofbbBXXOxxoxxbXBbOboxxooBbxOoboXoooXBbBbooOoBbbObxobxbBBoOxoxobBoOXXobObxobxOObobbbxxoboxoXxbXoxxxxbbobbXoXooBXXxboxbobxxxXboxOoOoxBoboOXboBoobXobxXdxObbbBxbxBbOOXbxooXboxboonxxxXOBbbXXoobooxbbxboxoOxBBbxBOxoobXbbxxbXXObxBbxBXBxoxOxoBbxBobOXbboxooBxbooXbXbooBbbxXboxXbxXoxbboxOXOooXbobooXXoxobbxoOxOoBbxxoBboboxoOBBxoboBoOboxbbxxbbbObXbboXbObOjXOXBxbxXobbbboBxBoOooxbxxOooxxbxxobbobxbbXoOobbBXoObxobXxoobxBxBbxoobXxoxObboxobobooxOoooBBbbbxxXoxbXxoXooxOBxboobxooxXOxobXoXmObxxXObooXXXboOXxbXxObxxbbObObxbxxbxxBXxBxoxOooaxooxXBXoXOxoOXxbBoBXxXooboXboOooxoxOxXxbxoboOObbBoXxbboxxooBBbooxXBbBoxBOobbboobobooxoxOxoXOXXboxXOboBxoboOooxbxBxobooXOoxOOObbxbobxxoxbOBoBxboxoobbbxoooxBxoobBbobBbooOBbxoboooookxXoobbbbBbOoxOBOobXObXBxoXoboxobbXBXBBoxBxoxooOxobxo",
+        "XBOBBOBOXOXBOXOOBOXOXOBBXOXBXOXXBBOBXOXXXOBBXBOOOXXOXBBBXOXOOOXXOBBOXXOBBXXXOXXXOXXOOXOXBOBBBXBBXOOXOBXXOOOOBXBOXXBXBXXXBXOBBOBBXXOXXBOBBXOXXBBOOOBBBOXBBBOXXBXXOBOBXOOOXXXXXXOBXXBOXXOOOOBOOOXBBOOBXOXXOBBBBOOXXOOXXXOBBXXOXBBOXOXBBBOXOBXXXBXXOBBXBOOBBBOXBBBOXBXBOBBXXXOXBOOXOOXBOXXOOOOBBBBOOBBOBOOBOBXBBOXBOBOXOXBXOBBOBBOXBOOXXBBBBBXOBXOBXXXBBBXOOBOOOXOOBBBXXOXXOXOBOXOBXXOXOOXXXOXXOBOOXBBXBOXBXXOXOXBOBXXOOXOOOXXBOOBBXXXBBOXBBXBOBBOOBOOXOXXBXOBOOOXBOXOOXOOOBBOBBOOOBBBBBOOBOXBBBOBOBXOXBXOBXBXBXBBBXOOO"
+    )
+
 #test1()
 #test2()
-test3()
+#test3()
+#test4()
+#test5()
+#test6()
+test7()
