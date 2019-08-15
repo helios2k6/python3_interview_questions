@@ -11,7 +11,7 @@ def isAbbreviation(a: str, b: str) -> bool:
             if isValid[i][j]:
                 if j < len(b) and str.upper(a[i]) == b[j]:
                     isValid[i + 1][j + 1] = True
-                if not str.isupper(a[i]):
+                if str.islower(a[i]):
                     isValid[i + 1][j] = True
     return isValid[len(a)][len(b)]
 
